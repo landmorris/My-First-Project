@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ dealer.name }} - Seca Product Monitor{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="mb-6">
+    <ol class="flex items-center space-x-2 text-sm text-gray-600">
+        <li><a href="{% url 'dashboard' %}" class="hover:text-blue-600"><i class="fas fa-home"></i> Dashboard</a></li>
+        <li><i class="fas fa-chevron-right text-xs"></i></li>
+        <li class="text-gray-900 font-medium">{{ dealer.name }}</li>
+    </ol>
+</nav>
+
+<!-- Dealer Header -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ dealer.name }}</h1>
+            <p class="text-gray-600 mb-4">
+                <a href="{{ dealer.website }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-external-link-alt mr-1"></i>{{ dealer.website }}
+                </a>
+            </p>
+            <div class="flex gap-4">
+                <div>
+                    <span class="text-sm text-gray-600">Spider:</span>
+                    <code class="ml-2 bg-gray-100 px-2 py-1 rounded text-sm">{{ dealer.spider_class }}</code>
+                </div>
+                <div>
+                    <span class="text-sm text-gray-600">Status:</span>
+                    <span class="ml-2 {% if dealer.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %} px-2 py-1 rounded-full text-xs font-semibold">
+                        {% if dealer.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <button
+            onclick="scrapeDealer({{ dealer.id }}, '{{ dealer.name }}')"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition"
+        >
+            <i class="fas fa-sync-alt mr-2"></i>Scrape Now
+        </button>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Products</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_products }}</p>
+            </div>
+            <div class="bg-blue-100 rounded-full p-3">
+                <i class="fas fa-box text-blue-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Changed Products</p>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ changed_products }}</p>
+            </div>
+            <div class="bg-yellow-100 rounded-full p-3">
+                <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Last Scrape</p>
+                <p class="text-sm font-bold text-gray-900 mt-2">
+                    {% if last_scrape %}
+                        {{ last_scrape.scrape_timestamp|date:"M d, Y" }}<br>
+                        <span class="text-xs text-gray-500">{{ last_scrape.scrape_timestamp|date:"g:i A" }}</span>
+                    {% else %}
+                        Never
+                    {% endif %}
+                </p>
+            </div>
+            <div class="bg-purple-100 rounded-full p-3">
+                <i class="fas fa-clock text-purple-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Listings -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-xl font-bold text-gray-900">
+            <i class="fas fa-list mr-2"></i>Product Listings
+        </h2>
+    </div>
+
+    <!-- Filters -->
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <form method="GET" action="" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search SKU, name, MPN..."
+                class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            >
+            <select name="changes" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                <option value="">All Changes</option>
+                <option value="yes" {% if changes_filter == 'yes' %}selected{% endif %}>Changed</option>
+                <option value="none" {% if changes_filter == 'none' %}selected{% endif %}>No Changes</option>
+            </select>
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    <i class="fas fa-filter mr-1"></i>Filter
+                </button>
+                <a href="{% url 'dealer_detail' dealer.id %}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium text-center">
+                    <i class="fas fa-times mr-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase">Dealer SKU</th>
+                    <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase">Product Name</th>
+                    <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase">MPN</th>
+                    <th class="text-center py-3 px-4 text-xs font-semibold text-gray-700 uppercase">Changed</th>
+                    <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase">Last Scraped</th>
+                    <th class="text-center py-3 px-4 text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for listing in listings %}
+                <tr class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onclick="window.location='{% url 'product_detail' listing.id %}'">
+                    <td class="py-3 px-4 text-sm font-mono text-gray-900">{{ listing.dealer_sku }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-900">{{ listing.product_name|truncatechars:60 }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ listing.mpn|default:"-" }}</td>
+                    <td class="py-3 px-4 text-center">
+                        {% if listing.content_changed %}
+                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-semibold">Yes</span>
+                        {% else %}
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-semibold">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-600">{{ listing.scrape_timestamp|date:"M d, Y g:i A" }}</td>
+                    <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
+                        <a href="{% url 'product_detail' listing.id %}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="py-8 px-4 text-center text-gray-500">
+                        No products found. Try adjusting your filters or run the scraper.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function scrapeDealer(dealerId, dealerName) {
+    if (!confirm(`Start scraping ${dealerName}?`)) {
+        return;
+    }
+
+    fetch(`/api/scrape-dealer/${dealerId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✓ ' + data.message);
+        } else {
+            alert('✗ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('✗ Network error: ' + error);
+    });
+}
+</script>
+{% endblock %}
