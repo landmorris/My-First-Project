@@ -1,7 +1,7 @@
 # PythonAnywhere Deployment Walkthrough
 ## Seca Product Monitor - Complete Step-by-Step Guide
 
-**Plan Required:** $5/month Hacker Plan (includes PostgreSQL)
+**Plan Required:** $5/month Hacker Plan (includes MySQL)
 **Time Required:** 15-20 minutes
 **Skill Level:** Beginner-friendly
 
@@ -17,21 +17,21 @@ Before starting, make sure you have:
 
 ---
 
-## 🗄️ Part 1: Create PostgreSQL Database (5 minutes)
+## 🗄️ Part 1: Create MySQL Database (5 minutes)
 
 ### Step 1: Go to Databases Tab
 
 1. Login to PythonAnywhere: https://www.pythonanywhere.com
 2. Click on the **"Databases"** tab in the top navigation
-3. Scroll to the **"PostgreSQL"** section
+3. Scroll to the **"MySQL"** section
 
-### Step 2: Initialize PostgreSQL
+### Step 2: Initialize MySQL
 
-If this is your first time using PostgreSQL:
+If this is your first time using MySQL:
 
-1. You'll see a button **"Initialize PostgreSQL"**
+1. You'll see a button **"Initialize MySQL"**
 2. Click it and wait for initialization (takes ~30 seconds)
-3. You'll see a message: "PostgreSQL initialized"
+3. You'll see a message: "MySQL initialized"
 
 ### Step 3: Create Database
 
@@ -39,9 +39,9 @@ If this is your first time using PostgreSQL:
 2. Click **"Create"**
 3. You'll see your database listed as: `yourusername$seca_monitor`
 
-### Step 4: Set PostgreSQL Password
+### Step 4: Set MySQL Password
 
-1. Find the **"PostgreSQL password"** section
+1. Find the **"MySQL password"** section
 2. Enter a secure password (you'll need this later)
 3. Click **"Set password"**
 4. **IMPORTANT:** Save this password somewhere - you'll need it for deployment
@@ -49,12 +49,12 @@ If this is your first time using PostgreSQL:
 **Example:**
 ```
 Database name: landmorris$seca_monitor
-Host: landmorris-postgres.postgres.pythonanywhere-services.com
+Host: landmorris-mysql.pythonanywhere-services.com
 Username: landmorris
 Password: [your secure password]
 ```
 
-✅ **Checkpoint:** You should now see your PostgreSQL database listed under "Databases"
+✅ **Checkpoint:** You should now see your MySQL database listed under "Databases"
 
 ---
 
@@ -92,9 +92,9 @@ Is this correct? (y/n):
 ```
 **Answer:** Type `y` and press Enter
 
-#### Prompt 2: PostgreSQL Password
+#### Prompt 2: MySQL Password
 ```
-Enter your PostgreSQL password:
+Enter your MySQL password:
 ```
 **Answer:** Enter the password you set in Part 1, Step 4 (it won't show as you type)
 
@@ -365,7 +365,7 @@ https://yourusername.pythonanywhere.com/admin/
 ```bash
 cat ~/My-First-Project/seca_monitor/.env
 ```
-3. Verify database credentials match your PostgreSQL setup
+3. Verify database credentials match your MySQL setup
 4. Test database connection:
 ```bash
 cd ~/My-First-Project/seca_monitor
@@ -424,7 +424,7 @@ Once deployed, here's your access info:
 - Password: (the password you set)
 
 **Database:**
-- Host: `yourusername-postgres.postgres.pythonanywhere-services.com`
+- Host: `yourusername-mysql.pythonanywhere-services.com`
 - Database: `yourusername$seca_monitor`
 - Username: `yourusername`
 - Password: (the password you set)
@@ -515,7 +515,7 @@ You now have a fully functional, publicly accessible Django application with:
 
 - ✅ Beautiful web interface
 - ✅ Full scraping capabilities
-- ✅ PostgreSQL database
+- ✅ MySQL database
 - ✅ Change tracking
 - ✅ Excel export
 - ✅ Public URL

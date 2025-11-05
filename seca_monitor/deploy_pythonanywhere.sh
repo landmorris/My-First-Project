@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Seca Monitor - PythonAnywhere One-Command Deployment Script
-# For $5/month Hacker Plan with PostgreSQL
+# For $5/month Hacker Plan with MySQL
 #
 # Usage: bash deploy_pythonanywhere.sh
 #
@@ -41,11 +41,11 @@ fi
 
 # Get database password
 echo ""
-print_info "Step 2: PostgreSQL Database Configuration"
-echo "You should have created a PostgreSQL database in the PythonAnywhere 'Databases' tab."
+print_info "Step 2: MySQL Database Configuration"
+echo "You should have created a MySQL database in the PythonAnywhere 'Databases' tab."
 echo "Database name should be: ${PA_USERNAME}\$seca_monitor"
 echo ""
-read -sp "Enter your PostgreSQL password: " DB_PASSWORD
+read -sp "Enter your MySQL password: " DB_PASSWORD
 echo ""
 
 # Get GitHub repo URL
@@ -133,12 +133,12 @@ DEBUG=False
 SECRET_KEY=$SECRET_KEY
 ALLOWED_HOSTS=${PA_USERNAME}.pythonanywhere.com
 
-# Database Configuration
+# Database Configuration (MySQL)
 DB_NAME=${PA_USERNAME}\$seca_monitor
 DB_USER=$PA_USERNAME
 DB_PASSWORD=$DB_PASSWORD
-DB_HOST=${PA_USERNAME}-postgres.postgres.pythonanywhere-services.com
-DB_PORT=5432
+DB_HOST=${PA_USERNAME}.mysql.pythonanywhere-services.com
+DB_PORT=3306
 
 # Scraper Settings
 SCRAPER_HEADLESS=True

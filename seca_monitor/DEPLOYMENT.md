@@ -5,7 +5,7 @@ Complete guide for deploying Seca Product Monitor to PythonAnywhere ($5/month pl
 ## Prerequisites
 
 - PythonAnywhere account ($5/month "Hacker" plan)
-- PostgreSQL database (available on PythonAnywhere)
+- MySQL database (available on PythonAnywhere)
 - Git repository with your code
 
 ## Deployment Steps
@@ -13,17 +13,17 @@ Complete guide for deploying Seca Product Monitor to PythonAnywhere ($5/month pl
 ### 1. Create PythonAnywhere Account
 
 1. Sign up at [https://www.pythonanywhere.com](https://www.pythonanywhere.com)
-2. Choose the **$5/month "Hacker" plan** (includes PostgreSQL)
+2. Choose the **$5/month "Hacker" plan** (includes MySQL)
 3. Verify your account
 
-### 2. Setup PostgreSQL Database
+### 2. Setup MySQL Database
 
 From PythonAnywhere dashboard:
 
 1. Go to **Databases** tab
-2. Create a new PostgreSQL database
+2. Create a new MySQL database
 3. Note your credentials:
-   - **Host**: `username-postgres.postgres.pythonanywhere-services.com`
+   - **Host**: `username-mysql.pythonanywhere-services.com`
    - **Database**: `username$seca_monitor`
    - **Username**: `username`
    - **Password**: (set your password)
@@ -92,8 +92,8 @@ ALLOWED_HOSTS=yourusername.pythonanywhere.com
 DB_NAME=yourusername$seca_monitor
 DB_USER=yourusername
 DB_PASSWORD=your-database-password
-DB_HOST=yourusername-postgres.postgres.pythonanywhere-services.com
-DB_PORT=5432
+DB_HOST=yourusername-mysql.pythonanywhere-services.com
+DB_PORT=3306
 
 # Scraper Settings
 SCRAPER_HEADLESS=True
@@ -324,10 +324,10 @@ Then reload web app from **Web** tab.
 
 ```bash
 # Create backup
-pg_dump -h yourusername-postgres.postgres.pythonanywhere-services.com -U yourusername yourusername$seca_monitor > backup.sql
+pg_dump -h yourusername-mysql.pythonanywhere-services.com -U yourusername yourusername$seca_monitor > backup.sql
 
 # Restore backup
-psql -h yourusername-postgres.postgres.pythonanywhere-services.com -U yourusername yourusername$seca_monitor < backup.sql
+psql -h yourusername-mysql.pythonanywhere-services.com -U yourusername yourusername$seca_monitor < backup.sql
 ```
 
 ### Monitor Logs
@@ -379,7 +379,7 @@ DealerProductListingHistory.objects.filter(scraped_at__lt=cutoff).delete()
 
 **PythonAnywhere Hacker Plan**: $5/month includes:
 - 1 web app
-- PostgreSQL database
+- MySQL database
 - 1GB disk space
 - Scheduled tasks
 - Always-on web app
@@ -397,7 +397,7 @@ If Playwright doesn't work on PythonAnywhere:
 
 1. **PythonAnywhere**: Host dashboard only (web interface)
 2. **Local Machine**: Run scrapers via management commands
-3. **Shared Database**: Both connect to PythonAnywhere PostgreSQL
+3. **Shared Database**: Both connect to PythonAnywhere MySQL
 
 This gives you full Playwright capabilities locally while maintaining the web dashboard on PythonAnywhere.
 

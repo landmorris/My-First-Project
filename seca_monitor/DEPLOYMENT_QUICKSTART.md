@@ -7,9 +7,9 @@
 ## 🚀 Three-Step Deployment
 
 ### STEP 1: Create Database (2 min)
-1. Go to **Databases** tab → PostgreSQL section
+1. Go to **Databases** tab → MySQL section
 2. Create database: `seca_monitor`
-3. Set PostgreSQL password → **SAVE THIS PASSWORD**
+3. Set MySQL password → **SAVE THIS PASSWORD**
 
 ### STEP 2: Run Script (10 min)
 1. Open **Bash** console
@@ -73,7 +73,7 @@ Visit: `https://yourusername.pythonanywhere.com`
 
 **During Deployment:**
 - PythonAnywhere username: `yourusername`
-- PostgreSQL password: `[write it here]`
+- MySQL password: `[write it here]`
 - Superuser username: `[write it here]`
 - Superuser password: `[write it here]`
 

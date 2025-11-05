@@ -70,7 +70,7 @@ Test → https://yourusername.pythonanywhere.com
 
 1. **Read:** `PYTHONANYWHERE_WALKTHROUGH.md` (15 min)
    - Understand what each step does
-   - Learn about PostgreSQL setup
+   - Learn about MySQL setup
    - Understand WSGI configuration
    - Learn troubleshooting techniques
 
@@ -114,7 +114,7 @@ Test → https://yourusername.pythonanywhere.com
 **⭐ RECOMMENDED FOR MOST USERS**
 
 **What it includes:**
-- ✅ **Part 1:** PostgreSQL Database Setup (5 min)
+- ✅ **Part 1:** MySQL Database Setup (5 min)
   - Screenshots descriptions
   - Step-by-step database creation
   - Password setup
@@ -206,7 +206,7 @@ Test → https://yourusername.pythonanywhere.com
 **Time to Run:** 10-15 minutes
 **User Input Required:**
 - Confirm username
-- PostgreSQL password
+- MySQL password
 - Superuser credentials
 
 ---
@@ -293,16 +293,16 @@ Use this checklist while deploying:
 
 ### **Database Setup** (2 minutes)
 - [ ] Go to Databases tab
-- [ ] Initialize PostgreSQL (if first time)
+- [ ] Initialize MySQL (if first time)
 - [ ] Create database: `seca_monitor`
-- [ ] Set PostgreSQL password
+- [ ] Set MySQL password
 - [ ] Password saved securely
 
 ### **Script Execution** (10 minutes)
 - [ ] Open Bash console
 - [ ] Run one-command deployment script
 - [ ] Confirm username
-- [ ] Enter PostgreSQL password
+- [ ] Enter MySQL password
 - [ ] Accept default repo and branch
 - [ ] Create superuser (username & password saved)
 - [ ] Wait for completion (~10 minutes)
@@ -479,7 +479,7 @@ cd seca_monitor
 After completing this deployment, you'll know:
 
 - ✅ How to deploy Django applications to PythonAnywhere
-- ✅ How to configure PostgreSQL databases
+- ✅ How to configure MySQL databases
 - ✅ How WSGI servers work
 - ✅ How to use virtual environments in production
 - ✅ How to configure static files

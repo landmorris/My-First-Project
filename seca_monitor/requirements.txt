@@ -5,8 +5,8 @@ Django==4.2.7
 playwright==1.40.0
 beautifulsoup4==4.12.2
 
-# Database
-psycopg2-binary==2.9.9
+# Database (MySQL for PythonAnywhere)
+mysqlclient==2.2.0
 
 # Data Processing & Export
 pandas==2.1.3
