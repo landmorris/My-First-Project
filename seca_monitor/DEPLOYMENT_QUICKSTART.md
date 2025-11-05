@@ -4,7 +4,21 @@
 
 ---
 
-## 🚀 Three-Step Deployment
+## 🚀 Four-Step Deployment
+
+### STEP 0: Create GitHub Token (3 min) - **REQUIRED**
+GitHub requires a Personal Access Token (PAT) for cloning repositories.
+
+**Quick Setup:**
+1. Visit: https://github.com/settings/tokens/new
+2. **Note:** `PythonAnywhere Deployment`
+3. **Expiration:** 90 days (or longer)
+4. **Select scopes:** ✅ `repo` (Full control of private repositories)
+5. Click **Generate token**
+6. **Copy token immediately** (starts with `ghp_`)
+7. **Save it securely** - you'll need it in Step 2
+
+📘 **Detailed Instructions:** See GITHUB_TOKEN_SETUP.md
 
 ### STEP 1: Create Database (2 min)
 1. Go to **Databases** tab → MySQL section
@@ -20,6 +34,7 @@ curl -sSL https://raw.githubusercontent.com/landmorris/My-First-Project/claude/d
 3. Answer prompts:
    - Confirm username: `y`
    - Enter DB password: `[your password from Step 1]`
+   - **Enter GitHub token: `[paste token from Step 0]`**
    - Repo URL: `[press Enter]`
    - Branch: `[press Enter]`
    - Confirm: `y`
@@ -70,6 +85,9 @@ Visit: `https://yourusername.pythonanywhere.com`
 ---
 
 ## 📋 Information You'll Need
+
+**Before Starting:**
+- GitHub Personal Access Token (from Step 0): `[write it here]`
 
 **During Deployment:**
 - PythonAnywhere username: `yourusername`

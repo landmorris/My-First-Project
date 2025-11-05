@@ -48,14 +48,41 @@ echo ""
 read -sp "Enter your MySQL password: " DB_PASSWORD
 echo ""
 
+# Get GitHub token
+echo ""
+print_info "Step 3: GitHub Authentication"
+echo "GitHub requires a Personal Access Token (PAT) for cloning repositories."
+echo ""
+print_warning "If you don't have a token yet:"
+echo "  1. Visit: https://github.com/settings/tokens/new"
+echo "  2. Select scope: 'repo' (Full control of private repositories)"
+echo "  3. Generate token and copy it"
+echo "  4. See GITHUB_TOKEN_SETUP.md for detailed instructions"
+echo ""
+read -sp "Enter your GitHub Personal Access Token: " GITHUB_TOKEN
+echo ""
+
+# Validate token
+if [ -z "$GITHUB_TOKEN" ]; then
+    print_error "GitHub token is required for deployment."
+    echo ""
+    echo "Please create a token at: https://github.com/settings/tokens/new"
+    echo "Then run this script again."
+    exit 1
+fi
+
 # Get GitHub repo URL
 echo ""
-print_info "Step 3: Repository Information"
+print_info "Step 4: Repository Information"
 echo "Default repo: https://github.com/landmorris/My-First-Project.git"
-read -p "Press Enter to use default or enter custom repo URL: " REPO_URL
-if [ -z "$REPO_URL" ]; then
-    REPO_URL="https://github.com/landmorris/My-First-Project.git"
+read -p "Press Enter to use default or enter custom repo URL: " REPO_URL_BASE
+if [ -z "$REPO_URL_BASE" ]; then
+    REPO_URL_BASE="https://github.com/landmorris/My-First-Project.git"
 fi
+
+# Inject token into URL (extract just the github.com/user/repo.git part)
+REPO_PATH=$(echo "$REPO_URL_BASE" | sed 's|https://||' | sed 's|http://||')
+REPO_URL="https://${GITHUB_TOKEN}@${REPO_PATH}"
 
 # Get branch name
 echo ""
@@ -71,8 +98,9 @@ echo "Deployment Configuration:"
 echo "=========================================="
 echo "Username: $PA_USERNAME"
 echo "Database: ${PA_USERNAME}\$seca_monitor"
-echo "Repository: $REPO_URL"
+echo "Repository: $REPO_URL_BASE"
 echo "Branch: $BRANCH_NAME"
+echo "GitHub Token: [hidden for security]"
 echo "=========================================="
 echo ""
 read -p "Proceed with deployment? (y/n): " proceed
