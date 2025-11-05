@@ -2,8 +2,9 @@
 Django==4.2.7
 
 # Web Scraping
-playwright==1.40.0
+selenium==4.15.2
 beautifulsoup4==4.12.2
+webdriver-manager==4.0.1
 
 # Database (MySQL for PythonAnywhere)
 mysqlclient==2.2.0

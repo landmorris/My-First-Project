@@ -5,7 +5,6 @@ Usage:
     python manage.py scrape_dealer --all
     python manage.py scrape_dealer --dealer-id 1
 """
-import asyncio
 from django.core.management.base import BaseCommand, CommandError
 from scrapers.models import Dealer
 
@@ -58,8 +57,8 @@ class Command(BaseCommand):
                 # Get spider instance for this dealer
                 spider = dealer.get_spider_instance()
 
-                # Run spider asynchronously
-                asyncio.run(spider.run(product_urls=product_urls))
+                # Run spider
+                spider.run(product_urls=product_urls)
 
                 self.stdout.write(
                     self.style.SUCCESS(f"✓ Successfully scraped {dealer.name}")

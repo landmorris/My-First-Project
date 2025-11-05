@@ -1,10 +1,16 @@
 """
-Base spider class with common Playwright initialization and methods
+Base spider class with common Selenium initialization and methods
 All dealer spiders inherit from this
 """
-import asyncio
+import time
 import logging
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from django.conf import settings
 
@@ -13,7 +19,7 @@ logger = logging.getLogger('scrapers')
 
 class BaseSpider:
     """
-    Base class with common Playwright initialization and utility methods
+    Base class with common Selenium initialization and utility methods
     """
 
     def __init__(self, dealer):
@@ -25,89 +31,89 @@ class BaseSpider:
         """
         self.dealer = dealer
         self.base_url = dealer.website
-        self.browser = None
-        self.context = None
-        self.page = None
-        self.playwright = None
+        self.driver = None
 
         # Settings from Django config
         self.user_agent = settings.SCRAPER_USER_AGENT
         self.headless = settings.SCRAPER_HEADLESS
-        self.timeout = settings.SCRAPER_TIMEOUT
+        self.timeout = settings.SCRAPER_TIMEOUT // 1000  # Convert ms to seconds
         self.delay = settings.SCRAPER_DELAY
 
         logger.info(f"Initialized {self.__class__.__name__} for {dealer.name}")
 
-    async def init_browser(self):
+    def init_browser(self):
         """
-        Initialize Playwright browser with optimal settings
+        Initialize Selenium browser with optimal settings
         """
         try:
-            self.playwright = await async_playwright().start()
-            self.browser = await self.playwright.chromium.launch(
-                headless=self.headless,
-                args=[
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-dev-shm-usage',
-                    '--no-sandbox',
-                ]
-            )
+            # Configure Chrome options
+            chrome_options = Options()
 
-            self.context = await self.browser.new_context(
-                user_agent=self.user_agent,
-                viewport={'width': 1920, 'height': 1080},
-                java_script_enabled=True,
-            )
+            if self.headless:
+                chrome_options.add_argument('--headless')
+                chrome_options.add_argument('--disable-gpu')
 
-            # Set default timeout
-            self.context.set_default_timeout(self.timeout)
+            # Anti-detection settings
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument(f'user-agent={self.user_agent}')
+            chrome_options.add_argument('--window-size=1920,1080')
 
-            self.page = await self.context.new_page()
+            # Exclude automation flags
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+
+            # Initialize WebDriver with webdriver-manager
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
+
+            # Set timeouts
+            self.driver.implicitly_wait(self.timeout)
+            self.driver.set_page_load_timeout(self.timeout)
+
             logger.info("Browser initialized successfully")
 
         except Exception as e:
             logger.error(f"Failed to initialize browser: {str(e)}")
             raise
 
-    async def close_browser(self):
+    def close_browser(self):
         """
         Clean up browser resources
         """
         try:
-            if self.page:
-                await self.page.close()
-            if self.context:
-                await self.context.close()
-            if self.browser:
-                await self.browser.close()
-            if self.playwright:
-                await self.playwright.stop()
+            if self.driver:
+                self.driver.quit()
             logger.info("Browser closed successfully")
         except Exception as e:
             logger.error(f"Error closing browser: {str(e)}")
 
-    async def navigate_to_url(self, url, wait_for='load'):
+    def navigate_to_url(self, url, wait_for_selector=None):
         """
         Navigate to URL with error handling
 
         Args:
             url: URL to navigate to
-            wait_for: Wait until condition ('load', 'domcontentloaded', 'networkidle')
+            wait_for_selector: Optional CSS selector to wait for after page load
 
         Returns:
             Page content as string
         """
         try:
             logger.info(f"Navigating to: {url}")
-            response = await self.page.goto(url, wait_until=wait_for)
+            self.driver.get(url)
 
-            if response.status != 200:
-                logger.warning(f"Non-200 response: {response.status}")
+            # Wait for specific element if provided
+            if wait_for_selector:
+                WebDriverWait(self.driver, self.timeout).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, wait_for_selector))
+                )
 
-            # Wait for content to load
-            await asyncio.sleep(self.delay)
+            # Additional delay for content to load
+            time.sleep(self.delay)
 
-            content = await self.page.content()
+            content = self.driver.page_source
             return content
 
         except Exception as e:
@@ -234,7 +240,7 @@ class BaseSpider:
         """
         return BeautifulSoup(html_content, 'html.parser')
 
-    async def scrape_product_detail(self, url):
+    def scrape_product_detail(self, url):
         """
         Scrape individual product detail page
         This method should be implemented by each dealer-specific spider
@@ -247,7 +253,7 @@ class BaseSpider:
         """
         raise NotImplementedError("Subclasses must implement scrape_product_detail()")
 
-    async def run(self):
+    def run(self):
         """
         Main execution method
         This method should be implemented by each dealer-specific spider

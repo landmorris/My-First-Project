@@ -2,7 +2,7 @@
 Dealer 2 Spider - Placeholder
 Template for adding second dealer
 """
-import asyncio
+import time
 import logging
 from django.utils import timezone
 from .base_spider import BaseSpider
@@ -23,7 +23,7 @@ class Dealer2Spider(BaseSpider):
         self.products_with_changes = 0
         self.errors = 0
 
-    async def scrape_product_detail(self, url):
+    def scrape_product_detail(self, url):
         """
         Scrape individual product detail page
 
@@ -37,7 +37,7 @@ class Dealer2Spider(BaseSpider):
             logger.info(f"Scraping product: {url}")
 
             # Navigate to product page
-            html_content = await self.navigate_to_url(url)
+            html_content = self.navigate_to_url(url)
             soup = self.parse_html(html_content)
 
             # TODO: Customize these selectors for this dealer's website structure
@@ -101,7 +101,7 @@ class Dealer2Spider(BaseSpider):
             logger.error(f"Failed to save product to database: {str(e)}")
             return None
 
-    async def run(self, product_urls=None):
+    def run(self, product_urls=None):
         """
         Main execution method
 
@@ -110,7 +110,7 @@ class Dealer2Spider(BaseSpider):
         """
         try:
             logger.info(f"Starting Dealer2 scraper for {self.dealer.name}")
-            await self.init_browser()
+            self.init_browser()
 
             if not product_urls:
                 logger.warning("No product URLs provided")
@@ -118,8 +118,8 @@ class Dealer2Spider(BaseSpider):
 
             for url in product_urls:
                 try:
-                    await self.scrape_product_detail(url)
-                    await asyncio.sleep(self.delay)
+                    self.scrape_product_detail(url)
+                    time.sleep(self.delay)
                 except Exception as e:
                     logger.error(f"Error scraping {url}: {str(e)}")
                     continue
@@ -131,4 +131,4 @@ class Dealer2Spider(BaseSpider):
             raise
 
         finally:
-            await self.close_browser()
+            self.close_browser()

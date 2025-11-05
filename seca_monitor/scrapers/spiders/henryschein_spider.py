@@ -2,7 +2,7 @@
 Henry Schein Spider - Adapted from SecaScraper
 Specific to Henry Schein website structure
 """
-import asyncio
+import time
 import logging
 from django.utils import timezone
 from .base_spider import BaseSpider
@@ -23,7 +23,7 @@ class HenryScheinSpider(BaseSpider):
         self.products_with_changes = 0
         self.errors = 0
 
-    async def scrape_product_detail(self, url):
+    def scrape_product_detail(self, url):
         """
         Scrape individual Henry Schein product detail page
 
@@ -37,7 +37,7 @@ class HenryScheinSpider(BaseSpider):
             logger.info(f"Scraping product: {url}")
 
             # Navigate to product page
-            html_content = await self.navigate_to_url(url)
+            html_content = self.navigate_to_url(url)
             soup = self.parse_html(html_content)
 
             # Extract product information using Henry Schein-specific selectors
@@ -225,7 +225,7 @@ class HenryScheinSpider(BaseSpider):
             logger.error(f"Failed to save product to database: {str(e)}")
             return None
 
-    async def scrape_product_list_page(self, list_url):
+    def scrape_product_list_page(self, list_url):
         """
         Scrape product listing/category page to get product URLs
         Implement this based on your specific needs
@@ -239,7 +239,7 @@ class HenryScheinSpider(BaseSpider):
         try:
             logger.info(f"Scraping product list: {list_url}")
 
-            html_content = await self.navigate_to_url(list_url)
+            html_content = self.navigate_to_url(list_url)
             soup = self.parse_html(html_content)
 
             # Extract product URLs (adjust selectors based on actual site structure)
@@ -272,7 +272,7 @@ class HenryScheinSpider(BaseSpider):
             logger.error(f"Failed to scrape product list {list_url}: {str(e)}")
             return []
 
-    async def run(self, product_urls=None):
+    def run(self, product_urls=None):
         """
         Main execution method for Henry Schein scraper
 
@@ -284,7 +284,7 @@ class HenryScheinSpider(BaseSpider):
             logger.info(f"Starting Henry Schein scraper for {self.dealer.name}")
 
             # Initialize browser
-            await self.init_browser()
+            self.init_browser()
 
             # If no product URLs provided, you need to get them somehow
             if not product_urls:
@@ -297,9 +297,9 @@ class HenryScheinSpider(BaseSpider):
             # Scrape each product
             for url in product_urls:
                 try:
-                    await self.scrape_product_detail(url)
+                    self.scrape_product_detail(url)
                     # Add delay between requests
-                    await asyncio.sleep(self.delay)
+                    time.sleep(self.delay)
                 except Exception as e:
                     logger.error(f"Error scraping {url}: {str(e)}")
                     continue
@@ -320,4 +320,4 @@ class HenryScheinSpider(BaseSpider):
 
         finally:
             # Clean up browser
-            await self.close_browser()
+            self.close_browser()
