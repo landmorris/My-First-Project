@@ -34,6 +34,11 @@ class Command(BaseCommand):
             nargs='+',
             help='Specific product URLs to scrape (optional)'
         )
+        parser.add_argument(
+            '--listing-url',
+            type=str,
+            help='Product listing page URL (will paginate through all pages)'
+        )
 
     def handle(self, *args, **options):
         # Determine which dealers to scrape
@@ -46,6 +51,7 @@ class Command(BaseCommand):
 
         # Get product URLs if provided
         product_urls = options.get('urls', None)
+        listing_url = options.get('listing_url', None)
 
         # Scrape each dealer
         for dealer in dealers:
@@ -57,8 +63,8 @@ class Command(BaseCommand):
                 # Get spider instance for this dealer
                 spider = dealer.get_spider_instance()
 
-                # Run spider
-                spider.run(product_urls=product_urls)
+                # Run spider with listing URL or product URLs
+                spider.run(product_urls=product_urls, listing_page_url=listing_url)
 
                 self.stdout.write(
                     self.style.SUCCESS(f"✓ Successfully scraped {dealer.name}")

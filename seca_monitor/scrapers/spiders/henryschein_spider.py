@@ -249,6 +249,8 @@ class HenryScheinSpider(BaseSpider):
                 '.product-link',
                 'a.product-name',
                 '.product-grid a',
+                '.search-result-items a',
+                'a[href*="/dental/"], a[href*="/medical/"]',  # Henry Schein specific
             ]
 
             for selector in link_selectors:
@@ -262,23 +264,141 @@ class HenryScheinSpider(BaseSpider):
                         elif not href.startswith('http'):
                             href = self.base_url.rstrip('/') + '/' + href
 
-                        if href not in product_links:
+                        # Only add product detail pages, not category/search pages
+                        if 'Search.aspx' not in href and href not in product_links:
                             product_links.append(href)
 
-            logger.info(f"Found {len(product_links)} product links")
+            logger.info(f"Found {len(product_links)} product links on this page")
             return product_links
 
         except Exception as e:
             logger.error(f"Failed to scrape product list {list_url}: {str(e)}")
             return []
 
-    def run(self, product_urls=None):
+    def scrape_all_list_pages(self, start_url, max_pages=10):
+        """
+        Scrape all paginated product listing pages
+
+        Args:
+            start_url: First page URL
+            max_pages: Maximum number of pages to scrape (safety limit)
+
+        Returns:
+            List of all product URLs from all pages
+        """
+        all_product_urls = []
+        current_page = 1
+
+        try:
+            logger.info(f"Starting pagination scrape from: {start_url}")
+
+            # Navigate to first page
+            self.navigate_to_url(start_url)
+
+            while current_page <= max_pages:
+                logger.info(f"Scraping page {current_page} of {max_pages}...")
+
+                # Get current page HTML
+                html_content = self.driver.page_source
+                soup = self.parse_html(html_content)
+
+                # Extract product URLs from current page
+                page_urls = self.scrape_product_list_page_from_soup(soup)
+                all_product_urls.extend(page_urls)
+
+                logger.info(f"Page {current_page}: Found {len(page_urls)} products. Total so far: {len(all_product_urls)}")
+
+                # Look for "Next" button/link
+                next_button = None
+                next_selectors = [
+                    'a.next',
+                    'a[title*="Next"]',
+                    'a[aria-label*="Next"]',
+                    '.pagination .next a',
+                    'a:contains("Next")',
+                    '.paging a.next',
+                ]
+
+                for selector in next_selectors:
+                    try:
+                        next_button = soup.select_one(selector)
+                        if next_button:
+                            break
+                    except:
+                        continue
+
+                # If no next button found, we're on the last page
+                if not next_button or current_page >= max_pages:
+                    logger.info(f"Reached last page or max pages. Total products found: {len(all_product_urls)}")
+                    break
+
+                # Click next button using Selenium
+                try:
+                    from selenium.webdriver.common.by import By
+                    # Try to find and click the next button
+                    next_elements = self.driver.find_elements(By.CSS_SELECTOR, 'a.next, a[title*="Next"], a[aria-label*="Next"]')
+                    if next_elements:
+                        next_elements[0].click()
+                        time.sleep(self.delay)  # Wait for page to load
+                        current_page += 1
+                    else:
+                        logger.info("No next button found in Selenium")
+                        break
+                except Exception as e:
+                    logger.error(f"Failed to click next button: {str(e)}")
+                    break
+
+            return all_product_urls
+
+        except Exception as e:
+            logger.error(f"Error during pagination: {str(e)}")
+            return all_product_urls
+
+    def scrape_product_list_page_from_soup(self, soup):
+        """
+        Extract product URLs from a BeautifulSoup object of a listing page
+
+        Args:
+            soup: BeautifulSoup object of listing page
+
+        Returns:
+            List of product URLs
+        """
+        product_links = []
+
+        link_selectors = [
+            '.product-item a',
+            '.product-link',
+            'a.product-name',
+            '.product-grid a',
+            '.search-result-items a',
+            'a[href*="/dental/"], a[href*="/medical/"]',
+        ]
+
+        for selector in link_selectors:
+            links = soup.select(selector)
+            for link in links:
+                href = link.get('href')
+                if href:
+                    # Make absolute URL
+                    if href.startswith('/'):
+                        href = self.base_url.rstrip('/') + href
+                    elif not href.startswith('http'):
+                        href = self.base_url.rstrip('/') + '/' + href
+
+                    # Only add product detail pages
+                    if 'Search.aspx' not in href and href not in product_links:
+                        product_links.append(href)
+
+        return product_links
+
+    def run(self, product_urls=None, listing_page_url=None):
         """
         Main execution method for Henry Schein scraper
 
         Args:
             product_urls: Optional list of product URLs to scrape
-                         If None, you should provide them or implement category scraping
+            listing_page_url: Optional URL of product listing page (will paginate through all pages)
         """
         try:
             logger.info(f"Starting Henry Schein scraper for {self.dealer.name}")
@@ -286,17 +406,24 @@ class HenryScheinSpider(BaseSpider):
             # Initialize browser
             self.init_browser()
 
-            # If no product URLs provided, you need to get them somehow
+            # If listing page URL is provided, scrape all pages to get product URLs
+            if listing_page_url:
+                logger.info(f"Scraping listing page with pagination: {listing_page_url}")
+                product_urls = self.scrape_all_list_pages(listing_page_url, max_pages=10)
+                logger.info(f"Collected {len(product_urls)} product URLs from listing pages")
+
+            # If no product URLs provided or collected, show warning
             if not product_urls:
                 logger.warning("No product URLs provided. You need to either:")
                 logger.warning("1. Pass product_urls to run() method")
-                logger.warning("2. Implement category page scraping")
+                logger.warning("2. Pass listing_page_url to run() method")
                 logger.warning("3. Provide URLs from your product catalog")
                 product_urls = []
 
             # Scrape each product
-            for url in product_urls:
+            for i, url in enumerate(product_urls, 1):
                 try:
+                    logger.info(f"Scraping product {i}/{len(product_urls)}")
                     self.scrape_product_detail(url)
                     # Add delay between requests
                     time.sleep(self.delay)
