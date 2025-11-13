@@ -287,67 +287,43 @@ class HenryScheinSpider(BaseSpider):
             List of all product URLs from all pages
         """
         all_product_urls = []
-        current_page = 1
 
         try:
             logger.info(f"Starting pagination scrape from: {start_url}")
 
-            # Navigate to first page
-            self.navigate_to_url(start_url)
+            # Henry Schein uses URL parameter: pagenumber=1, pagenumber=2, etc.
+            for page_num in range(1, max_pages + 1):
+                logger.info(f"Scraping page {page_num} of {max_pages}...")
 
-            while current_page <= max_pages:
-                logger.info(f"Scraping page {current_page} of {max_pages}...")
+                # Build URL for this page
+                if 'pagenumber=' in start_url:
+                    # Replace existing page number
+                    import re
+                    page_url = re.sub(r'pagenumber=\d+', f'pagenumber={page_num}', start_url)
+                else:
+                    # Add page number parameter
+                    separator = '&' if '?' in start_url else '?'
+                    page_url = f"{start_url}{separator}pagenumber={page_num}"
 
-                # Get current page HTML
-                html_content = self.driver.page_source
+                # Navigate to page
+                html_content = self.navigate_to_url(page_url)
                 soup = self.parse_html(html_content)
 
                 # Extract product URLs from current page
                 page_urls = self.scrape_product_list_page_from_soup(soup)
+
+                # If no products found, we've likely reached the end
+                if not page_urls:
+                    logger.info(f"No products found on page {page_num}. Stopping pagination.")
+                    break
+
                 all_product_urls.extend(page_urls)
+                logger.info(f"Page {page_num}: Found {len(page_urls)} products. Total so far: {len(all_product_urls)}")
 
-                logger.info(f"Page {current_page}: Found {len(page_urls)} products. Total so far: {len(all_product_urls)}")
+                # Small delay between pages
+                time.sleep(1)
 
-                # Look for "Next" button/link
-                next_button = None
-                next_selectors = [
-                    'a.next',
-                    'a[title*="Next"]',
-                    'a[aria-label*="Next"]',
-                    '.pagination .next a',
-                    'a:contains("Next")',
-                    '.paging a.next',
-                ]
-
-                for selector in next_selectors:
-                    try:
-                        next_button = soup.select_one(selector)
-                        if next_button:
-                            break
-                    except:
-                        continue
-
-                # If no next button found, we're on the last page
-                if not next_button or current_page >= max_pages:
-                    logger.info(f"Reached last page or max pages. Total products found: {len(all_product_urls)}")
-                    break
-
-                # Click next button using Selenium
-                try:
-                    from selenium.webdriver.common.by import By
-                    # Try to find and click the next button
-                    next_elements = self.driver.find_elements(By.CSS_SELECTOR, 'a.next, a[title*="Next"], a[aria-label*="Next"]')
-                    if next_elements:
-                        next_elements[0].click()
-                        time.sleep(self.delay)  # Wait for page to load
-                        current_page += 1
-                    else:
-                        logger.info("No next button found in Selenium")
-                        break
-                except Exception as e:
-                    logger.error(f"Failed to click next button: {str(e)}")
-                    break
-
+            logger.info(f"Pagination complete. Total products found: {len(all_product_urls)}")
             return all_product_urls
 
         except Exception as e:
