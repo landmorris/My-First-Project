@@ -1,12 +1,10 @@
+```
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -23,36 +21,24 @@ wheels/
 .installed.cfg
 *.egg
 
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+.env/
+
 # Django
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-/staticfiles/
-/media/
 
-# Environment
-.env
-.venv
+# Coverage
+.coverage
+coverage/
+htmlcov/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Exports
-/exports/*.xlsx
-
-# Playwright
-.playwright/
-playwright-state/
-
-# Logs
-*.log
-scraper.log
+# Scrapy
+scrapy.cfg
+```
